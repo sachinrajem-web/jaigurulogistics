@@ -66,7 +66,7 @@
         .input-with-btn { display: flex; align-items: stretch; }
         .input-with-btn input { flex-grow: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none; }
         .input-with-btn button { border-top-left-radius: 0; border-bottom-left-radius: 0; }
-        #volWtButton { cursor: pointer; background-color: var(--secondary-color); color: white; padding: 10px 15px; border: none; }
+        #volWtButton, #update_volWtButton { cursor: pointer; background-color: var(--secondary-color); color: white; padding: 10px 15px; border: none; }
         
         .full-width { grid-column: 1 / -1; }
         .two-column-span { grid-column: span 2; }
@@ -90,7 +90,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.9em;
-            min-width: 1000px; /* Ensure horizontal scroll on smaller screens */
+            min-width: 1000px;
         }
 
         .report-table th, .report-table td {
@@ -106,22 +106,12 @@
             top: 0;
         }
         
-        .btn-view {
-            background-color: #00bcd4; /* Light Blue */
-            color: white;
-            padding: 5px 10px;
-            border-radius: 3px;
-            font-size: 0.8em;
-        }
-        
         /* Column Selector specific styles */
         #columnSelectorModal .modal-content { max-width: 450px; }
     </style>
 </head>
-<body>
-
-<div class="sidebar">
-    <h3>🚢 Jai Guru Logistics DashBoard</h3>
+<body oncontextmenu="return false;"> <div class="sidebar">
+    <h3>🚢 Jai Guru Logistics Management</h3>
     <ul>
         <li><a href="#awb-booking" class="active" onclick="showSection('awb-booking', this)">📦 Awb Booking</a></li>
         <li><a href="#awb-update" onclick="showSection('awb-update', this)">🔄 Awb Update</a></li>
@@ -135,6 +125,7 @@
         <div class="container">
             <h2>🚚 Material Booking Form</h2>
             <form id="bookingForm" action="https://script.google.com/macros/s/AKfycbzaOPfV0Hn8yU6uHdIpwpRJgGOHDy35p8lW-_xTTm1MClPDCuja1W-yN9izSVEH3hti/exec" method="POST">
+                <input type="hidden" name="mode" value="new">
                 <div class="form-grid">
                     <div class="form-group"><label for="date">Date</label><input type="date" id="date" name="date" required></div>
                     <div class="form-group"><label for="awbNo">Awb No.</label><input type="text" id="awbNo" name="awbNo" placeholder="Enter AWB Number" required></div>
@@ -201,7 +192,87 @@
     </div>
     
     <div id="awb-update" class="content-section">
-        <div class="container"><h2>🔄 AWB Status Update</h2><p>This section will contain fields for updating the status, location, or delivery details of an existing AWB.</p></div>
+        <div class="container">
+            <h2>🔄 AWB Status/Data Update</h2>
+            <div class="form-grid" style="grid-template-columns: 3fr 1fr; margin-bottom: 25px; padding: 15px; background-color: var(--light-bg); border-radius: 4px;">
+                <div class="form-group">
+                    <label for="updateAwbNo">Enter AWB No. to Update</label>
+                    <input type="text" id="updateAwbNo" placeholder="AWB Number" required>
+                </div>
+                <div class="form-group action-buttons action-buttons-start" style="margin-top: 25px;">
+                    <button type="button" class="btn btn-primary" id="fetchAwbData">Fetch AWB Data</button>
+                </div>
+            </div>
+            
+            <form id="updateForm" style="display: none;" action="https://script.google.com/macros/s/AKfycbzaOPfV0Hn8yU6uHdIpwpRJgGOHDy35p8lW-_xTTm1MClPDCuja1W-yN9izSVEH3hti/exec" method="POST">
+                <input type="hidden" name="mode" value="update"> 
+                <input type="hidden" id="rowIndexToUpdate" name="rowIndexToUpdate" value=""> 
+
+                <div class="form-grid">
+                    <div class="form-group"><label for="update_date">Date</label><input type="date" id="update_date" name="date" required></div>
+                    <div class="form-group"><label for="update_awbNo">Awb No.</label><input type="text" id="update_awbNo" name="awbNo" placeholder="Enter AWB Number" required readonly></div>
+                    <div class="form-group"><label for="update_bookingMode">Booking Mode</label><select id="update_bookingMode" name="bookingMode"><option value="FTL">FTL</option><option value="LTL">LTL</option><option value="Air">Air</option><option value="Rail">Rail</option></select></div>
+                    <div class="form-group"><label for="update_liability">Liability</label><select id="update_liability" name="liability"><option value="Carrier">Carrier Liability</option><option value="Owner">Owner's Risk</option></select></div>
+                    
+                    <div class="form-group"><label for="update_vendor">Vendor</label><input type="text" id="update_vendor" name="vendor" placeholder="Vendor Name"></div>
+                    <div class="form-group"><label for="update_vendorAwbNo">Vendor Awb No.</label><input type="text" id="update_vendorAwbNo" name="vendorAwbNo" placeholder="Vendor AWB Number"></div>
+                    <div class="form-group"><label for="update_consignor">Consignor</label><input type="text" id="update_consignor" name="consignor" placeholder="Consignor Name" required></div>
+                    <div class="form-group"><label for="update_consignee">Consignee</label><input type="text" id="update_consignee" name="consignee" placeholder="Consignee Name" required></div>
+                    
+                    <div class="form-group"><label for="update_origin">Origin</label><input type="text" id="update_origin" name="origin" placeholder="Origin City/State" required></div>
+                    <div class="form-group"><label for="update_destination">Destination</label><input type="text" id="update_destination" name="destination" placeholder="Destination City/State" required></div>
+                    <div class="form-group"><label for="update_destinationPincode">Destination Pincode</label><input type="text" id="update_destinationPincode" name="destinationPincode" pattern="\d{6}" placeholder="6 Digit Pincode" required></div>
+                    <div class="form-group"><label for="update_contactNo1">Contact No. 1</label><input type="tel" id="update_contactNo1" name="contactNo1" placeholder="Primary Contact Number" required></div>
+                    
+                    <div class="form-group"><label for="update_contactNo2">Contact No. 2</label><input type="tel" id="update_contactNo2" name="contactNo2" placeholder="Secondary Contact Number"></div>
+                    <div class="form-group"><label for="update_invoiceNo">Invoice No.</label><input type="text" id="update_invoiceNo" name="invoiceNo" placeholder="Invoice Number" required></div>
+                    <div class="form-group"><label for="update_invoiceValue">Invoice Value</label><input type="number" id="update_invoiceValue" name="invoiceValue" step="0.01" min="0" placeholder="0.00" required></div>
+                    <div class="form-group"><label for="update_ewaybillNo">Ewaybill No.</label><input type="text" id="update_ewaybillNo" name="ewaybillNo" placeholder="Ewaybill Number"></div>
+                    
+                    <div class="form-group"><label for="update_qty">Qty.</label><input type="number" id="update_qty" name="qty" min="1" placeholder="Number of boxes/pieces" required></div>
+                    <div class="form-group">
+                        <label for="update_cftCalculated">CFT (Cubic Feet)</label>
+                        <input type="number" id="update_cftCalculated" name="cftCalculated" step="0.01" min="0" placeholder="0.00" readonly required>
+                        <small style="color: var(--primary-color);">*Calculated from dimensions</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="update_actualWeight">Actual Weight (Kg)</label>
+                        <input type="number" id="update_actualWeight" name="actualWeight" step="0.01" min="0" oninput="calculateChargedWeightUpdate()" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="update_volWt">Vol Wt (Kg)</label>
+                        <div class="input-with-btn">
+                            <input type="number" id="update_volWt" name="volWt" step="0.01" min="0" placeholder="0.00" readonly required>
+                            <button type="button" id="update_volWtButton">Calculate</button>
+                        </div>
+                        <small style="color: var(--secondary-color);">*Click 'Calculate' for L x B x H pop-up</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="update_chargedWeight">Charged Weight (Kg)</label>
+                        <input type="number" id="update_chargedWeight" name="chargedWeight" step="0.01" min="0" placeholder="0.00" readonly required>
+                        <small style="color: var(--primary-color);">*Max of Actual Wt & Vol Wt</small>
+                    </div>
+                    <div class="form-group"><label for="update_oda">ODA (Out of Delivery Area)</label><select id="update_oda" name="oda"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+                    <div class="form-group"><label for="update_extraCharges">Extra charges (if any)</label><input type="number" id="update_extraCharges" name="extraCharges" step="0.01" min="0" value="0.00" placeholder="0.00"></div>
+                    <div class="form-group"><label for="update_shippingMode">Shipping Mode</label><select id="update_shippingMode" name="shippingMode"><option value="Road">Road</option><option value="Air">Air</option><option value="Rail">Rail</option><option value="Sea">Sea</option></select></div>
+
+                    <div class="form-group"><label for="update_vehicleNo">Vehicle No.</label><input type="text" id="update_vehicleNo" name="vehicleNo" placeholder="Vehicle Registration Number"></div>
+                    <div class="form-group"><label for="update_driverNo">Driver No.</label><input type="tel" id="update_driverNo" name="driverNo" placeholder="Driver Contact Number"></div>
+                    <div class="form-group two-column-span"><label for="update_uploadInvoice">Invoice File</label><input type="text" id="update_uploadInvoice" name="uploadInvoice" placeholder="Enter invoice filename/path if uploaded elsewhere"></div>
+
+                    <div class="form-group full-width"><label for="update_remark">Remark</label><textarea id="update_remark" name="remark" rows="3" placeholder="Any specific instructions or notes..."></textarea></div>
+
+                </div>
+
+                <div class="action-buttons">
+                    <button type="reset" class="btn btn-secondary">Clear Fields</button>
+                    <button type="submit" class="btn btn-primary">Update AWB Data</button>
+                </div>
+            </form>
+            
+            <p id="updateMessage" style="text-align: center; margin-top: 20px; color: red;"></p>
+        </div>
     </div>
 
     <div id="misc" class="content-section">
@@ -227,7 +298,9 @@
                 </div>
                 <div class="form-group">
                     <label for="reportConsignee">Filter by Consignee</label>
-                    <input type="text" id="reportConsignee" placeholder="Consignee Name">
+                    <select id="reportConsignee">
+                        <option value="">-- Select Consignee --</option>
+                        </select>
                 </div>
                 
                 <div class="form-group action-buttons action-buttons-start" style="margin-top: 25px;">
@@ -240,11 +313,11 @@
                 <table class="report-table" id="misReportTable">
                     <thead>
                         <tr id="misReportTableHeaders">
-                            <th>Date</th><th>Awb No.</th><th>Vendor</th><th>Consignor</th><th>Destination</th><th>Qty</th><th>Chg. Wt (Kg)</th><th>Inv. Value</th><th>Remark</th><th>Action</th>
+                            <th>Date</th><th>Awb No.</th><th>Vendor</th><th>Consignor</th><th>Destination</th><th>Qty</th><th>Chg. Wt (Kg)</th><th>Inv. Value</th><th>Remark</th>
                         </tr>
                     </thead>
                     <tbody id="misReportTableBody">
-                        <tr><td colspan="10" style="text-align: center;">Click **Fetch Report** to load data.</td></tr>
+                        <tr><td colspan="9" style="text-align: center;">Click **Fetch Report** to load data.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -313,6 +386,44 @@
 </div>
 
 <script>
+    // --- CONFIGURATION ---
+    const REPORT_FETCH_URL = 'https://script.google.com/macros/s/AKfycbzaOPfV0Hn8yU6uHdIpwpRJgGOHDy35p8lW-_xTTm1MClPDCuja1W-yN9izSVEH3hti/exec'; 
+    const ALL_COLUMNS = [
+        { name: "Date", index: 0, defaultShow: true },
+        { name: "Awb No.", index: 1, defaultShow: true },
+        { name: "Booking Mode", index: 2, defaultShow: false },
+        { name: "Liability", index: 3, defaultShow: false },
+        { name: "Vendor", index: 4, defaultShow: true },
+        { name: "Vendor Awb No.", index: 5, defaultShow: false },
+        { name: "Consignor", index: 6, defaultShow: true },
+        { name: "Consignee", index: 7, defaultShow: true }, 
+        { name: "Origin", index: 8, defaultShow: false },
+        { name: "Destination", index: 9, defaultShow: true },
+        { name: "Pincode", index: 10, defaultShow: false },
+        { name: "Contact No. 1", index: 11, defaultShow: false },
+        { name: "Contact No. 2", index: 12, defaultShow: false },
+        { name: "Invoice No.", index: 13, defaultShow: false },
+        { name: "Invoice Value", index: 14, defaultShow: true },
+        { name: "Ewaybill No.", index: 15, defaultShow: false },
+        { name: "Qty", index: 16, defaultShow: true },
+        { name: "CFT", index: 17, defaultShow: false },
+        { name: "Actual Wt (Kg)", index: 18, defaultShow: false },
+        { name: "Vol Wt (Kg)", index: 19, defaultShow: false },
+        { name: "Chg. Wt (Kg)", index: 20, defaultShow: true },
+        { name: "ODA", index: 21, defaultShow: false },
+        { name: "Extra Charges", index: 22, defaultShow: false },
+        { name: "Shipping Mode", index: 23, defaultShow: false },
+        { name: "Remark", index: 24, defaultShow: true },
+        { name: "Vehicle No.", index: 25, defaultShow: false },
+        { name: "Driver No.", index: 26, defaultShow: false },
+        { name: "Invoice File Link", index: 27, defaultShow: false },
+        { name: "Timestamp", index: 28, defaultShow: false }
+    ];
+
+    let selectedColumns = ALL_COLUMNS.filter(col => col.defaultShow).map(col => col.name);
+    let cachedReportData = []; 
+    const consigneeDropdown = document.getElementById('reportConsignee');
+
     // --- NAVIGATION LOGIC ---
     function showSection(sectionId, element) {
         document.querySelectorAll('.content-section').forEach(section => { section.classList.remove('active'); });
@@ -320,73 +431,72 @@
         document.querySelectorAll('.sidebar ul li a').forEach(link => { link.classList.remove('active'); });
         element.classList.add('active');
         
-        // Load report data automatically when MIS section is activated (optional)
         if (sectionId === 'misc') {
-            // Only fetch if data hasn't been fetched or needs refreshing
-            if (cachedReportData.length === 0) {
-                 fetchReportData(); 
-            } else {
-                 renderTable(cachedReportData); // Render from cache if columns changed
-            }
+            fetchReportData(false); // Fetch/Load cached data on MIS entry
+        }
+        if (sectionId === 'awb-update') {
+            // Reset update form visibility when navigating
+            document.getElementById('updateForm').style.display = 'none';
+            document.getElementById('updateMessage').textContent = '';
         }
     }
 
-    // --- GOOGLE SHEET SUBMISSION LOGIC (doPost) ---
+    // --- AWB BOOKING SUBMISSION LOGIC (doPost - mode: new) ---
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
         e.preventDefault(); 
         
         const form = e.target;
-        // IMPORTANT: The URL from the form action attribute is used here
         const url = form.action;
-        
         const formData = new FormData(form);
         const data = new URLSearchParams(formData);
 
-        alert("Submitting data to Google Sheet...");
+        alert("Submitting new booking to Google Sheet...");
 
-        // Send the data using fetch (AJAX)
         fetch(url, {
             method: 'POST',
             body: data
         })
         .then(response => {
             if (response.ok) {
-                alert("✅ Booking successfully saved to Google Sheet!");
+                alert("✅ Booking successfully saved!");
                 form.reset(); 
                 document.getElementById('volWt').value = '0.00';
                 document.getElementById('cftCalculated').value = '0.00';
                 calculateChargedWeight(); 
+                cachedReportData = []; // Invalidate cache
             } else {
                 return response.text().then(text => {
-                    alert("❌ Submission failed. Apps Script returned an error or non-standard response. Check console (F12).");
+                    alert("❌ Submission failed. Check console.");
                     console.error("Apps Script Response:", text);
                 });
             }
         })
         .catch(error => {
             console.error('Network Error:', error);
-            alert("❌ Network error during submission. Check your internet connection or server status.");
+            alert("❌ Network error during submission.");
         });
     });
 
 
-    // --- VOLUMETRIC WEIGHT AND CFT CALCULATION LOGIC ---
+    // --- VOLUMETRIC WEIGHT AND CFT CALCULATION LOGIC (New Booking Form) ---
     var modal = document.getElementById("volWtModal");
     var btn = document.getElementById("volWtButton");
+    var updateBtn = document.getElementById("update_volWtButton");
     var span = document.getElementsByClassName("close-btn")[0];
     var dimensionInputs = document.getElementById("dimensionInputs");
     var addRowBtn = document.getElementById("addDimensionRow");
     var calculateBtn = document.getElementById("calculateVolWtBtn");
     var cftFactorSelect = document.getElementById("cftFactorSelect");
     var cftCalculatedField = document.getElementById("cftCalculated"); 
-
-    btn.onclick = function() { modal.style.display = "block"; }
+    
+    // Logic to open modal from either form
+    btn.onclick = function() { modal.style.display = "block"; modal.currentTargetForm = 'new'; }
+    updateBtn.onclick = function() { modal.style.display = "block"; modal.currentTargetForm = 'update'; }
     span.onclick = function() { modal.style.display = "none"; }
     window.onclick = function(event) {
         if (event.target == modal) { modal.style.display = "none"; }
     }
 
-    // Add row function
     addRowBtn.onclick = function() {
         var newRow = document.createElement('div');
         newRow.className = 'modal-grid';
@@ -406,7 +516,6 @@
     }
     
     window.removeRow = function(button) { 
-        // Ensure at least one row remains
         if (dimensionInputs.querySelectorAll('.modal-grid').length > 1) {
              button.closest('.modal-grid').remove(); 
         } else {
@@ -414,12 +523,11 @@
         }
     }
 
-    // Calculate and Apply function
     calculateBtn.onclick = function() {
         let totalVolWt = 0;
         let totalCFT = 0;
         const volWtFactor = parseFloat(cftFactorSelect.value); 
-        const cftFactor = 28316.8; // Cubic Centimeters per Cubic Foot
+        const cftFactor = 28316.8; 
 
         const lengths = document.querySelectorAll('.length');
         const breadths = document.querySelectorAll('.breadth');
@@ -434,23 +542,27 @@
 
             if (l > 0 && b > 0 && h > 0) {
                 const totalVolumeCM = l * b * h * p;
-                // Volumetric Weight (Total Volume / Factor)
                 totalVolWt += totalVolumeCM / volWtFactor;
-                // CFT (Total Volume / CC per CF)
                 totalCFT += totalVolumeCM / cftFactor; 
             }
         }
         
-        document.getElementById('volWt').value = totalVolWt.toFixed(2);
-        cftCalculatedField.value = totalCFT.toFixed(2);
-        
+        // Apply results to the correct form based on modal.currentTargetForm
+        if (modal.currentTargetForm === 'update') {
+            document.getElementById('update_volWt').value = totalVolWt.toFixed(2);
+            document.getElementById('update_cftCalculated').value = totalCFT.toFixed(2);
+            calculateChargedWeightUpdate();
+        } else { // 'new' or default
+            document.getElementById('volWt').value = totalVolWt.toFixed(2);
+            document.getElementById('cftCalculated').value = totalCFT.toFixed(2);
+            calculateChargedWeight();
+        }
+
         modal.style.display = "none";
-        calculateChargedWeight();
-        
         alert(`Volumetric Weight (${volWtFactor} Factor): ${totalVolWt.toFixed(2)} Kg. Calculated CFT: ${totalCFT.toFixed(2)}.`);
     }
 
-    // Charged Weight calculation
+    // Charged Weight calculation for New Booking
     function calculateChargedWeight() {
         const actualWt = parseFloat(document.getElementById('actualWeight').value) || 0;
         const volWt = parseFloat(document.getElementById('volWt').value) || 0;
@@ -461,110 +573,190 @@
     document.addEventListener('DOMContentLoaded', calculateChargedWeight);
 
 
-    // --- MIS REPORT LOGIC (doGet) ---
-    // This URL must match your Apps Script Web App Deployment URL
-    const REPORT_FETCH_URL = 'https://script.google.com/macros/s/AKfycbzaOPfV0Hn8yU6uHdIpwpRJgGOHDy35p8lW-_xTTm1MClPDCuja1W-yN9izSVEH3hti/exec'; 
-
-    document.getElementById('fetchReportData').addEventListener('click', fetchReportData);
-
-    // Define all available columns and their corresponding Google Sheet Index (0-based)
-    // IMPORTANT: Check these indices against your Google Sheet columns
-    const ALL_COLUMNS = [
-        { name: "Date", index: 0, defaultShow: true },
-        { name: "Awb No.", index: 1, defaultShow: true },
-        { name: "Booking Mode", index: 2, defaultShow: false },
-        { name: "Liability", index: 3, defaultShow: false },
-        { name: "Vendor", index: 4, defaultShow: true },
-        { name: "Vendor Awb No.", index: 5, defaultShow: false },
-        { name: "Consignor", index: 6, defaultShow: true },
-        { name: "Consignee", index: 7, defaultShow: true }, // Set to true based on user request
-        { name: "Origin", index: 8, defaultShow: false },
-        { name: "Destination", index: 9, defaultShow: true },
-        { name: "Pincode", index: 10, defaultShow: false },
-        { name: "Contact No. 1", index: 11, defaultShow: false },
-        { name: "Invoice No.", index: 13, defaultShow: false },
-        { name: "Invoice Value", index: 14, defaultShow: true },
-        { name: "Ewaybill No.", index: 15, defaultShow: false },
-        { name: "Qty", index: 16, defaultShow: true },
-        { name: "CFT", index: 17, defaultShow: false },
-        { name: "Actual Wt (Kg)", index: 18, defaultShow: false },
-        { name: "Vol Wt (Kg)", index: 19, defaultShow: false },
-        { name: "Chg. Wt (Kg)", index: 20, defaultShow: true },
-        { name: "ODA", index: 21, defaultShow: false },
-        { name: "Vehicle No.", index: 25, defaultShow: false },
-        { name: "Remark", index: 24, defaultShow: true },
-        // Action is not a data column, handled separately
-    ];
+    // --- AWB UPDATE LOGIC (doGet - getSingle & doPost - mode: update) ---
+    document.getElementById('fetchAwbData').addEventListener('click', fetchAwbDataForUpdate);
+    document.getElementById('updateForm').addEventListener('submit', handleUpdateSubmission);
+    document.getElementById('update_actualWeight').addEventListener('input', calculateChargedWeightUpdate);
     
-    // Initialize selected columns based on defaultShow=true
-    let selectedColumns = ALL_COLUMNS.filter(col => col.defaultShow).map(col => col.name);
-    let cachedReportData = []; // To store fetched data locally for quick column changes
-
-    // --- Column Selector Modal Logic ---
-    const selectorModal = document.getElementById('columnSelectorModal');
-    const openSelectorBtn = document.getElementById('openColumnSelector');
-    const closeSelectorBtn = document.getElementById('closeColumnSelector');
-    const applySelectionBtn = document.getElementById('applyColumnSelection');
-    const columnCheckboxes = document.getElementById('columnCheckboxes');
-
-    // 1. Initialize Checkboxes when opening the modal
-    openSelectorBtn.onclick = function() {
-        // Generate checkboxes only once
-        if (columnCheckboxes.children.length === 0) {
-            ALL_COLUMNS.forEach(col => {
-                const isChecked = selectedColumns.includes(col.name);
-                columnCheckboxes.innerHTML += `
-                    <label style="font-weight: normal; margin-bottom: 0;">
-                        <input type="checkbox" data-col-name="${col.name}" ${isChecked ? 'checked' : ''}> 
-                        ${col.name}
-                    </label>
-                `;
-            });
-        } else {
-             // Reset checkboxes based on current selection before opening
-             columnCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(input => {
-                const colName = input.getAttribute('data-col-name');
-                input.checked = selectedColumns.includes(colName);
-             });
+    function calculateChargedWeightUpdate() {
+        const actualWt = parseFloat(document.getElementById('update_actualWeight').value) || 0;
+        const volWt = parseFloat(document.getElementById('update_volWt').value) || 0;
+        const chargedWt = Math.max(actualWt, volWt);
+        document.getElementById('update_chargedWeight').value = chargedWt.toFixed(2);
+    }
+    
+    // Fetch a single record by AWB No.
+    function fetchAwbDataForUpdate() {
+        const awbNo = document.getElementById('updateAwbNo').value.trim();
+        const updateForm = document.getElementById('updateForm');
+        const updateMessage = document.getElementById('updateMessage');
+        updateForm.style.display = 'none';
+        updateMessage.textContent = '';
+        
+        if (!awbNo) {
+            updateMessage.textContent = 'Please enter an AWB Number.';
+            return;
         }
-        selectorModal.style.display = "block";
+
+        updateMessage.textContent = 'Fetching data...';
+
+        const params = new URLSearchParams({
+            mode: 'getSingle',
+            awbNo: awbNo
+        });
+        
+        const fetchUrl = `${REPORT_FETCH_URL}?${params.toString()}`;
+
+        fetch(fetchUrl)
+        .then(response => response.json())
+        .then(data => {
+            updateMessage.textContent = '';
+            if (data.status === 'success' && data.record) {
+                populateUpdateForm(data.record, data.rowIndex);
+                updateForm.style.display = 'block';
+            } else {
+                updateMessage.textContent = data.message || `AWB No. ${awbNo} not found or error occurred.`;
+            }
+        })
+        .catch(error => {
+            updateMessage.textContent = 'Network Error while fetching AWB data.';
+            console.error('Fetch error for AWB update:', error);
+        });
     }
 
-    closeSelectorBtn.onclick = function() { selectorModal.style.display = "none"; }
+    // Populate the update form fields
+    function populateUpdateForm(record, rowIndex) {
+        const fieldMapping = [
+            { id: 'update_date', index: 0, type: 'date' },
+            { id: 'update_awbNo', index: 1, type: 'text' },
+            { id: 'update_bookingMode', index: 2, type: 'select' },
+            { id: 'update_liability', index: 3, type: 'select' },
+            { id: 'update_vendor', index: 4, type: 'text' },
+            { id: 'update_vendorAwbNo', index: 5, type: 'text' },
+            { id: 'update_consignor', index: 6, type: 'text' },
+            { id: 'update_consignee', index: 7, type: 'text' },
+            { id: 'update_origin', index: 8, type: 'text' },
+            { id: 'update_destination', index: 9, type: 'text' },
+            { id: 'update_destinationPincode', index: 10, type: 'text' },
+            { id: 'update_contactNo1', index: 11, type: 'text' },
+            { id: 'update_contactNo2', index: 12, type: 'text' },
+            { id: 'update_invoiceNo', index: 13, type: 'text' },
+            { id: 'update_invoiceValue', index: 14, type: 'number' },
+            { id: 'update_ewaybillNo', index: 15, type: 'text' },
+            { id: 'update_qty', index: 16, type: 'number' },
+            { id: 'update_cftCalculated', index: 17, type: 'number' },
+            { id: 'update_actualWeight', index: 18, type: 'number' },
+            { id: 'update_volWt', index: 19, type: 'number' },
+            { id: 'update_chargedWeight', index: 20, type: 'number' },
+            { id: 'update_oda', index: 21, type: 'select' },
+            { id: 'update_extraCharges', index: 22, type: 'number' },
+            { id: 'update_shippingMode', index: 23, type: 'select' },
+            { id: 'update_remark', index: 24, type: 'text' },
+            { id: 'update_vehicleNo', index: 25, type: 'text' },
+            { id: 'update_driverNo', index: 26, type: 'text' },
+            { id: 'update_uploadInvoice', index: 27, type: 'text' }
+        ];
 
-    // 2. Apply Column Selection
-    applySelectionBtn.onclick = function() {
-        selectedColumns = [];
-        columnCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(input => {
-            if (input.checked) {
-                selectedColumns.push(input.getAttribute('data-col-name'));
+        document.getElementById('rowIndexToUpdate').value = rowIndex; 
+
+        fieldMapping.forEach(mapping => {
+            const element = document.getElementById(mapping.id);
+            if (!element) return;
+            
+            let value = record[mapping.index];
+
+            if (value === null || value === undefined) {
+                value = '';
+            }
+
+            if (mapping.type === 'date' && value) {
+                const dateObj = new Date(value);
+                // Convert to YYYY-MM-DD format
+                const yyyy = dateObj.getFullYear();
+                const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const dd = String(dateObj.getDate()).padStart(2, '0');
+                element.value = `${yyyy}-${mm}-${dd}`;
+            } else if (mapping.type === 'select') {
+                element.value = String(value); 
+            } else if (mapping.type === 'number') {
+                element.value = (parseFloat(value) || 0).toFixed(2);
+            } else {
+                element.value = String(value);
             }
         });
-        selectorModal.style.display = "none";
-        // Re-render the table with the new columns using cached data
-        renderTable(cachedReportData); 
+
+        document.getElementById('updateMessage').textContent = `AWB ${record[1]} data loaded successfully. Ready to edit.`;
+        calculateChargedWeightUpdate(); // Recalculate based on loaded data
     }
 
-    // --- Data Fetching Logic (Sends filters to Apps Script) ---
-    function fetchReportData() {
-        const tableBody = document.getElementById('misReportTableBody');
-        tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">Loading data... please wait.</td></tr>';
+    // Handle form submission for UPDATE
+    function handleUpdateSubmission(e) {
+        e.preventDefault(); 
         
-        // Get filters
+        const form = e.target;
+        const url = form.action;
+        const updateMessage = document.getElementById('updateMessage');
+        
+        const formData = new FormData(form);
+        const data = new URLSearchParams(formData);
+
+        updateMessage.textContent = "Updating record... please wait.";
+
+        fetch(url, {
+            method: 'POST',
+            body: data
+        })
+        .then(response => {
+            if (response.ok) {
+                updateMessage.textContent = "✅ AWB data successfully UPDATED!";
+                cachedReportData = []; // Invalidate cache
+                setTimeout(() => {
+                    document.getElementById('updateForm').style.display = 'none';
+                    document.getElementById('updateAwbNo').value = '';
+                    updateMessage.textContent = 'Enter a new AWB number to update.';
+                }, 3000);
+            } else {
+                return response.text().then(text => {
+                    updateMessage.textContent = "❌ Update failed. Check console (F12) for details.";
+                    console.error("Apps Script Response:", text);
+                });
+            }
+        })
+        .catch(error => {
+            updateMessage.textContent = '❌ Network error during update submission.';
+            console.error('Network Error:', error);
+        });
+    }
+
+    // --- MIS REPORT LOGIC (doGet - getReport) ---
+    document.getElementById('fetchReportData').addEventListener('click', () => fetchReportData(true)); 
+    consigneeDropdown.addEventListener('change', () => fetchReportData(true)); 
+
+    function fetchReportData(forceFetch = false) {
+        const tableBody = document.getElementById('misReportTableBody');
+        
         const dateFrom = document.getElementById('reportDateFrom').value;
         const dateTo = document.getElementById('reportDateTo').value;
         const searchTerm = document.getElementById('reportSearchAwb').value;
         const vendorTerm = document.getElementById('reportVendor').value;
-        const consigneeTerm = document.getElementById('reportConsignee').value;
+        const consigneeTerm = consigneeDropdown.value; 
+
+        const filtersApplied = dateFrom || dateTo || searchTerm || vendorTerm || consigneeTerm;
+
+        if (!forceFetch && !filtersApplied && cachedReportData.length > 0) {
+            renderTable(cachedReportData);
+            return;
+        }
+
+        tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">Loading data... please wait.</td></tr>';
         
-        // Construct the query parameters including new filters
         const params = new URLSearchParams({
             mode: 'getReport',
             dateFrom: dateFrom,
             dateTo: dateTo,
             search: searchTerm,
-            vendor: vendorTerm,      // New Filter
-            consignee: consigneeTerm  // New Filter
+            vendor: vendorTerm,      
+            consignee: consigneeTerm  
         });
         
         const fetchUrl = `${REPORT_FETCH_URL}?${params.toString()}`;
@@ -573,7 +765,10 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                cachedReportData = data.records; // Cache the full dataset
+                cachedReportData = data.records; 
+                if (!filtersApplied || forceFetch) {
+                    populateConsigneeDropdown(data.records);
+                }
                 renderTable(data.records);
             } else {
                 tableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: red;">Error fetching data: ${data.message}</td></tr>`;
@@ -586,33 +781,92 @@
         });
     }
 
-    // --- Table Rendering Logic (Renders only selected columns) ---
+    function populateConsigneeDropdown(records) {
+        const consigneeIndex = ALL_COLUMNS.find(col => col.name === 'Consignee').index;
+        const consigneeNames = new Set();
+
+        records.forEach(record => {
+            const name = record[consigneeIndex];
+            if (name) {
+                consigneeNames.add(name);
+            }
+        });
+
+        consigneeDropdown.innerHTML = '<option value="">-- Select Consignee --</option>';
+
+        Array.from(consigneeNames).sort().forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            consigneeDropdown.appendChild(option);
+        });
+    }
+
+    // --- Column Selector Logic ---
+    const selectorModal = document.getElementById('columnSelectorModal');
+    const openSelectorBtn = document.getElementById('openColumnSelector');
+    const closeSelectorBtn = document.getElementById('closeColumnSelector');
+    const applySelectionBtn = document.getElementById('applyColumnSelection');
+    const columnCheckboxes = document.getElementById('columnCheckboxes');
+
+    openSelectorBtn.onclick = function() {
+        if (columnCheckboxes.children.length === 0) {
+            ALL_COLUMNS.filter(col => col.name !== "Timestamp").forEach(col => {
+                const isChecked = selectedColumns.includes(col.name);
+                columnCheckboxes.innerHTML += `
+                    <label style="font-weight: normal; margin-bottom: 0;">
+                        <input type="checkbox" data-col-name="${col.name}" ${isChecked ? 'checked' : ''}> 
+                        ${col.name}
+                    </label>
+                `;
+            });
+        } else {
+             columnCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(input => {
+                const colName = input.getAttribute('data-col-name');
+                input.checked = selectedColumns.includes(colName);
+             });
+        }
+        selectorModal.style.display = "block";
+    }
+
+    closeSelectorBtn.onclick = function() { selectorModal.style.display = "none"; }
+
+    applySelectionBtn.onclick = function() {
+        selectedColumns = [];
+        columnCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(input => {
+            if (input.checked) {
+                selectedColumns.push(input.getAttribute('data-col-name'));
+            }
+        });
+        selectorModal.style.display = "none";
+        renderTable(cachedReportData); 
+    }
+
+    // --- Table Rendering Logic ---
     function renderTable(records) {
         const tableHead = document.getElementById('misReportTableHeaders');
         const tableBody = document.getElementById('misReportTableBody');
         tableHead.innerHTML = '';
         tableBody.innerHTML = ''; 
 
-        if (records.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">No records found matching the criteria.</td></tr>';
-            return;
-        }
-        
-        // 1. Determine which columns to display and their sheet index
+        // 1. Determine columns to display
         const displayColumns = ALL_COLUMNS
             .filter(col => selectedColumns.includes(col.name));
             
-        // 2. Build Table Headers (THead)
+        // 2. Build Table Headers
         displayColumns.forEach(col => {
             const th = document.createElement('th');
             th.textContent = col.name;
             tableHead.appendChild(th);
         });
-        // Add the mandatory Action column
-        tableHead.innerHTML += '<th>Action</th>';
 
+        if (records.length === 0) {
+            const message = selectedColumns.length > 0 ? "No records found matching the current filters." : "Select columns to display data.";
+            tableBody.innerHTML = `<tr><td colspan="${displayColumns.length || 1}" style="text-align: center;">${message}</td></tr>`;
+            return;
+        }
 
-        // 3. Build Table Body (TBody)
+        // 3. Build Table Body
         records.forEach(record => {
             const row = tableBody.insertRow();
             
@@ -620,10 +874,10 @@
                 const cell = row.insertCell();
                 const value = record[col.index];
                 
-                // Format specific column types (Date, Weight, Currency, Remark truncation)
+                // Formatting Logic
                 if (col.name === "Date" && value) {
                     cell.textContent = new Date(value).toLocaleDateString();
-                } else if (["Chg. Wt (Kg)", "Invoice Value", "Actual Wt (Kg)", "Vol Wt (Kg)", "CFT"].includes(col.name)) {
+                } else if (["Chg. Wt (Kg)", "Invoice Value", "Actual Wt (Kg)", "Vol Wt (Kg)", "CFT", "Extra Charges"].includes(col.name)) {
                     cell.textContent = (parseFloat(value) || 0).toFixed(2);
                 } else if (col.name === "Remark" && value) {
                     cell.textContent = value.substring(0, 25) + (value.length > 25 ? '...' : '');
@@ -632,10 +886,6 @@
                     cell.textContent = value || '-';
                 }
             });
-            
-            // Add Action Cell
-            const actionCell = row.insertCell();
-            actionCell.innerHTML = `<button class="btn btn-view" title="Awb No.: ${record[1]}">View Details</button>`;
         });
     }
 
