@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structured Logistics Booking System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --light-bg: #f8f9fa;
+            --white-bg: #ffffff;
+            --border-color: #ced4da;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--light-bg);
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+        
+        /* SIDEBAR STYLES */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h3 { text-align: center; margin-bottom: 30px; color: #ecf0f1; padding: 0 10px; }
+        .sidebar ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar ul li a {
+            display: block; padding: 15px 20px; color: white; text-decoration: none; transition: background-color 0.3s, color 0.3s;
+            border-left: 5px solid transparent;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li a.active { background-color: #34495e; color: var(--primary-color); border-left: 5px solid var(--primary-color); }
+
+        /* CONTENT STYLES */
+        .main-content { margin-left: 250px; flex-grow: 1; padding: 20px; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+
+        .container { max-width: 100%; margin: 0 auto; background-color: var(--white-bg); padding: 30px; border-radius: 8px; box-shadow: var(--shadow); }
+
+        h2 { text-align: center; color: var(--primary-color); margin-bottom: 30px; border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        @media (min-width: 1100px) { .form-grid { grid-template-columns: repeat(4, 1fr); } }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #495057; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box; }
+        
+        .input-with-btn { display: flex; align-items: stretch; }
+        .input-with-btn input { flex-grow: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none; }
+        .input-with-btn button { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+        #volWtButton { cursor: pointer; background-color: var(--secondary-color); color: white; padding: 10px 15px; border: none; }
+        
+        .full-width { grid-column: 1 / -1; }
+        .two-column-span { grid-column: span 2; }
+        .action-buttons { display: flex; justify-content: flex-end; margin-top: 30px; }
+        .action-buttons-start { justify-content: flex-start !important; }
+        .btn { padding: 10px 20px; margin-left: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-secondary { background-color: var(--secondary-color); color: white; }
+        
+        /* MODAL STYLES */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: var(--white-bg); margin: 10% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 8px; position: relative; }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .modal-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 15px; margin-bottom: 15px; padding: 10px; border: 1px dashed var(--border-color); border-radius: 4px; }
+        .modal-grid-row { display: flex; gap: 5px; }
+        .remove-row-btn { background-color: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; line-height: 1; }
+        #addDimensionRow { background-color: var(--success-color); color: white; padding: 10px 15px; }
+
+        /* MIS Table Styles */
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            min-width: 1000px; /* Ensure horizontal scroll on smaller screens */
+        }
+
+        .report-table th, .report-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px 8px;
+            text-align: left;
+        }
+
+        .report-table thead th {
+            background-color: var(--primary-color);
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        .btn-view {
+            background-color: #00bcd4; /* Light Blue */
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+        
+        /* Column Selector specific styles */
+        #columnSelectorModal .modal-content { max-width: 450px; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h3>🚢 Jai Guru Logistics DashBoard</h3>
+    <ul>
+        <li><a href="#awb-booking" class="active" onclick="showSection('awb-booking', this)">📦 Awb Booking</a></li>
+        <li><a href="#awb-update" onclick="showSection('awb-update', this)">🔄 Awb Update</a></li>
+        <li><a href="#misc" onclick="showSection('misc', this)">📊 MIS (Reports)</a></li>
+    </ul>
+</div>
+
+<div class="main-content">
+
+    <div id="awb-booking" class="content-section active">
+        <div class="container">
+            <h2>🚚 Material Booking Form</h2>
+            <form id="bookingForm" action="https://script.google.com/macros/s/AKfycbzaOPfV0Hn8yU6uHdIpwpRJgGOHDy35p8lW-_xTTm1MClPDCuja1W-yN9izSVEH3hti/exec" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label for="date">Date</label><input type="date" id="date" name="date" required></div>
+                    <div class="form-group"><label for="awbNo">Awb No.</label><input type="text" id="awbNo" name="awbNo" placeholder="Enter AWB Number" required></div>
+                    <div class="form-group"><label for="bookingMode">Booking Mode</label><select id="bookingMode" name="bookingMode"><option value="FTL">FTL</option><option value="LTL">LTL</option><option value="Air">Air</option><option value="Rail">Rail</option></select></div>
+                    <div class="form-group"><label for="liability">Liability</label><select id="liability" name="liability"><option value="Carrier">Carrier Liability</option><option value="Owner">Owner's Risk</option></select></div>
+                    
+                    <div class="form-group"><label for="vendor">Vendor</label><input type="text" id="vendor" name="vendor" placeholder="Vendor Name"></div>
+                    <div class="form-group"><label for="vendorAwbNo">Vendor Awb No.</label><input type="text" id="vendorAwbNo" name="vendorAwbNo" placeholder="Vendor AWB Number"></div>
+                    <div class="form-group"><label for="consignor">Consignor</label><input type="text" id="consignor" name="consignor" placeholder="Consignor Name" required></div>
+                    <div class="form-group"><label for="consignee">Consignee</label><input type="text" id="consignee" name="consignee" placeholder="Consignee Name" required></div>
+                    
+                    <div class="form-group"><label for="origin">Origin</label><input type="text" id="origin" name="origin" placeholder="Origin City/State" required></div>
+                    <div class="form-group"><label for="destination">Destination</label><input type="text" id="destination" name="destination" placeholder="Destination City/State" required></div>
+                    <div class="form-group"><label for="destinationPincode">Destination Pincode</label><input type="text" id="destinationPincode" name="destinationPincode" pattern="\d{6}" placeholder="6 Digit Pincode" required></div>
+                    <div class="form-group"><label for="contactNo1">Contact No. 1</label><input type="tel" id="contactNo1" name="contactNo1" placeholder="Primary Contact Number" required></div>
+                    
+                    <div class="form-group"><label for="contactNo2">Contact No. 2</label><input type="tel" id="contactNo2" name="contactNo2" placeholder="Secondary Contact Number"></div>
+                    <div class="form-group"><label for="invoiceNo">Invoice No.</label><input type="text" id="invoiceNo" name="invoiceNo" placeholder="Invoice Number" required></div>
+                    <div class="form-group"><label for="invoiceValue">Invoice Value</label><input type="number" id="invoiceValue" name="invoiceValue" step="0.01" min="0" placeholder="0.00" required></div>
+                    <div class="form-group"><label for="ewaybillNo">Ewaybill No.</label><input type="text" id="ewaybillNo" name="ewaybillNo" placeholder="Ewaybill Number"></div>
+                    
+                    <div class="form-group"><label for="qty">Qty.</label><input type="number" id="qty" name="qty" min="1" placeholder="Number of boxes/pieces" required></div>
+                    <div class="form-group">
+                        <label for="cftCalculated">CFT (Cubic Feet)</label>
+                        <input type="number" id="cftCalculated" name="cftCalculated" step="0.01" min="0" placeholder="0.00" readonly required>
+                        <small style="color: var(--primary-color);">*Calculated from dimensions</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="actualWeight">Actual Weight (Kg)</label>
+                        <input type="number" id="actualWeight" name="actualWeight" step="0.01" min="0" oninput="calculateChargedWeight()" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="volWt">Vol Wt (Kg)</label>
+                        <div class="input-with-btn">
+                            <input type="number" id="volWt" name="volWt" step="0.01" min="0" placeholder="0.00" readonly required>
+                            <button type="button" id="volWtButton">Calculate</button>
+                        </div>
+                        <small style="color: var(--secondary-color);">*Click 'Calculate' for L x B x H pop-up</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="chargedWeight">Charged Weight (Kg)</label>
+                        <input type="number" id="chargedWeight" name="chargedWeight" step="0.01" min="0" placeholder="0.00" readonly required>
+                        <small style="color: var(--primary-color);">*Max of Actual Wt & Vol Wt</small>
+                    </div>
+                    <div class="form-group"><label for="oda">ODA (Out of Delivery Area)</label><select id="oda" name="oda"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+                    <div class="form-group"><label for="extraCharges">Extra charges (if any)</label><input type="number" id="extraCharges" name="extraCharges" step="0.01" min="0" value="0.00" placeholder="0.00"></div>
+                    <div class="form-group"><label for="shippingMode">Shipping Mode</label><select id="shippingMode" name="shippingMode"><option value="Road">Road</option><option value="Air">Air</option><option value="Rail">Rail</option><option value="Sea">Sea</option></select></div>
+
+                    <div class="form-group"><label for="vehicleNo">Vehicle No.</label><input type="text" id="vehicleNo" name="vehicleNo" placeholder="Vehicle Registration Number"></div>
+                    <div class="form-group"><label for="driverNo">Driver No.</label><input type="tel" id="driverNo" name="driverNo" placeholder="Driver Contact Number"></div>
+                    <div class="form-group two-column-span"><label for="uploadInvoice">Invoice File</label><input type="text" id="uploadInvoice" name="uploadInvoice" placeholder="Enter invoice filename/path if uploaded elsewhere"></div>
+
+                    <div class="form-group full-width"><label for="remark">Remark</label><textarea id="remark" name="remark" rows="3" placeholder="Any specific instructions or notes..."></textarea></div>
+
+                </div>
+
+                <div class="action-buttons">
+                    <button type="reset" class="btn btn-secondary">Clear Form</button>
+                    <button type="submit" class="btn btn-primary">Submit Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="awb-update" class="content-section">
+        <div class="container"><h2>🔄 AWB Status Update</h2><p>This section will contain fields for updating the status, location, or delivery details of an existing AWB.</p></div>
+    </div>
+
+    <div id="misc" class="content-section">
+        <div class="container">
+            <h2>📊 Awb & Status Reports (MIS)</h2>
+            
+            <div class="form-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px; padding: 15px; background-color: var(--light-bg); border-radius: 4px;">
+                <div class="form-group">
+                    <label for="reportDateFrom">Date From</label>
+                    <input type="date" id="reportDateFrom">
+                </div>
+                <div class="form-group">
+                    <label for="reportDateTo">Date To</label>
+                    <input type="date" id="reportDateTo">
+                </div>
+                <div class="form-group">
+                    <label for="reportSearchAwb">Search Awb / Consignor</label>
+                    <input type="text" id="reportSearchAwb" placeholder="Enter AWB No. or Name">
+                </div>
+                <div class="form-group">
+                    <label for="reportVendor">Filter by Vendor</label>
+                    <input type="text" id="reportVendor" placeholder="Vendor Name">
+                </div>
+                <div class="form-group">
+                    <label for="reportConsignee">Filter by Consignee</label>
+                    <input type="text" id="reportConsignee" placeholder="Consignee Name">
+                </div>
+                
+                <div class="form-group action-buttons action-buttons-start" style="margin-top: 25px;">
+                    <button type="button" class="btn btn-primary" id="fetchReportData">Fetch Report</button>
+                    <button type="button" class="btn btn-secondary" id="openColumnSelector" style="margin-left: 10px;">Select Columns</button>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto; margin-top: 20px;">
+                <table class="report-table" id="misReportTable">
+                    <thead>
+                        <tr id="misReportTableHeaders">
+                            <th>Date</th><th>Awb No.</th><th>Vendor</th><th>Consignor</th><th>Destination</th><th>Qty</th><th>Chg. Wt (Kg)</th><th>Inv. Value</th><th>Remark</th><th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="misReportTableBody">
+                        <tr><td colspan="10" style="text-align: center;">Click **Fetch Report** to load data.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="volWtModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📏 Dimension Calculator (L x B x H)</h3>
+            <span class="close-btn">&times;</span>
+        </div>
+
+        <div class="form-group">
+            <label for="cftFactorSelect">Volumetric Factor ($\text{cm}^3$ to Kg conversion) *</label>
+            <select id="cftFactorSelect" class="form-control">
+                <option value="4700">4700 (Road / General Cargo)</option>
+                <option value="6000">6000 (Air Cargo)</option>
+                <option value="5000">5000 (Express/Courier)</option>
+            </select>
+        </div>
+
+        <p>Pcs | Length (cm) | Breadth (cm) | Height (cm)</p>
+        
+        <div id="dimensionInputs">
+            <div class="modal-grid">
+                <div class="form-group" style="margin-bottom: 0;"><label>Pcs</label><input type="number" name="pcs[]" min="1" value="1" placeholder="Pcs" class="pcs-input"></div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>L x B x H (Cm)</label>
+                    <div class="modal-grid-row">
+                        <input type="number" name="length[]" step="0.01" min="0" placeholder="L" class="dim-input length">
+                        <input type="number" name="breadth[]" step="0.01" min="0" placeholder="B" class="dim-input breadth">
+                        <input type="number" name="height[]" step="0.01" min="0" placeholder="H" class="dim-input height">
+                        <button type="button" class="remove-row-btn" onclick="removeRow(this)">X</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" id="addDimensionRow" class="btn">+ Add Row</button>
+            <button type="button" class="btn btn-primary" id="calculateVolWtBtn">Calculate & Apply All Values</button>
+        </div>
+        
+        <small style="display: block; text-align: right; margin-top: 10px;">
+            *CFT Formula: $(\text{L} \times \text{B} \times \text{H} \times \text{Pcs}) / 28316.8$
+        </small>
+
+    </div>
+</div>
+
+<div id="columnSelectorModal" class="modal">
+    <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-header">
+            <h3>⚙️ Choose Columns to Display</h3>
+            <span class="close-btn" id="closeColumnSelector">&times;</span>
+        </div>
+        <div id="columnCheckboxes" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px;">
+            </div>
+        <div style="text-align: right; margin-top: 20px;">
+            <button type="button" class="btn btn-primary" id="applyColumnSelection">Apply</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- NAVIGATION LOGIC ---
+    function showSection(sectionId, element) {
+        document.querySelectorAll('.content-section').forEach(section => { section.classList.remove('active'); });
+        document.getElementById(sectionId).classList.add('active');
+        document.querySelectorAll('.sidebar ul li a').forEach(link => { link.classList.remove('active'); });
+        element.classList.add('active');
+        
+        // Load report data automatically when MIS section is activated (optional)
+        if (sectionId === 'misc') {
+            // Only fetch if data hasn't been fetched or needs refreshing
+            if (cachedReportData.length === 0) {
+                 fetchReportData(); 
+            } else {
+                 renderTable(cachedReportData); // Render from cache if columns changed
+            }
+        }
+    }
+
+    // --- GOOGLE SHEET SUBMISSION LOGIC (doPost) ---
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        e.preventDefault(); 
+        
+        const form = e.target;
+        // IMPORTANT: The URL from the form action attribute is used here
+        const url = form.action;
+        
+        const formData = new FormData(form);
+        const data = new URLSearchParams(formData);
+
+        alert("Submitting data to Google Sheet...");
+
+        // Send the data using fetch (AJAX)
+        fetch(url, {
+            method: 'POST',
+            body: data
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("✅ Booking successfully saved to Google Sheet!");
+                form.reset(); 
+                document.getElementById('volWt').value = '0.00';
+                document.getElementById('cftCalculated').value = '0.00';
+                calculateChargedWeight(); 
+            } else {
+                return response.text().then(text => {
+                    alert("❌ Submission failed. Apps Script returned an error or non-standard response. Check console (F12).");
+                    console.error("Apps Script Response:", text);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Network Error:', error);
+            alert("❌ Network error during submission. Check your internet connection or server status.");
+        });
+    });
+
+
+    // --- VOLUMETRIC WEIGHT AND CFT CALCULATION LOGIC ---
+    var modal = document.getElementById("volWtModal");
+    var btn = document.getElementById("volWtButton");
+    var span = document.getElementsByClassName("close-btn")[0];
+    var dimensionInputs = document.getElementById("dimensionInputs");
+    var addRowBtn = document.getElementById("addDimensionRow");
+    var calculateBtn = document.getElementById("calculateVolWtBtn");
+    var cftFactorSelect = document.getElementById("cftFactorSelect");
+    var cftCalculatedField = document.getElementById("cftCalculated"); 
+
+    btn.onclick = function() { modal.style.display = "block"; }
+    span.onclick = function() { modal.style.display = "none"; }
+    window.onclick = function(event) {
+        if (event.target == modal) { modal.style.display = "none"; }
+    }
+
+    // Add row function
+    addRowBtn.onclick = function() {
+        var newRow = document.createElement('div');
+        newRow.className = 'modal-grid';
+        newRow.innerHTML = `
+            <div class="form-group" style="margin-bottom: 0;"><label>Pcs</label><input type="number" name="pcs[]" min="1" value="1" placeholder="Pcs" class="pcs-input"></div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>L x B x H (Cm)</label>
+                <div class="modal-grid-row">
+                    <input type="number" name="length[]" step="0.01" min="0" placeholder="L" class="dim-input length">
+                    <input type="number" name="breadth[]" step="0.01" min="0" placeholder="B" class="dim-input breadth">
+                    <input type="number" name="height[]" step="0.01" min="0" placeholder="H" class="dim-input height">
+                    <button type="button" class="remove-row-btn" onclick="removeRow(this)">X</button>
+                </div>
+            </div>
+        `;
+        dimensionInputs.appendChild(newRow);
+    }
+    
+    window.removeRow = function(button) { 
+        // Ensure at least one row remains
+        if (dimensionInputs.querySelectorAll('.modal-grid').length > 1) {
+             button.closest('.modal-grid').remove(); 
+        } else {
+            alert("At least one dimension row is required.");
+        }
+    }
+
+    // Calculate and Apply function
+    calculateBtn.onclick = function() {
+        let totalVolWt = 0;
+        let totalCFT = 0;
+        const volWtFactor = parseFloat(cftFactorSelect.value); 
+        const cftFactor = 28316.8; // Cubic Centimeters per Cubic Foot
+
+        const lengths = document.querySelectorAll('.length');
+        const breadths = document.querySelectorAll('.breadth');
+        const heights = document.querySelectorAll('.height');
+        const pcs = document.querySelectorAll('.pcs-input');
+
+        for (let i = 0; i < lengths.length; i++) {
+            const l = parseFloat(lengths[i].value) || 0;
+            const b = parseFloat(breadths[i].value) || 0;
+            const h = parseFloat(heights[i].value) || 0;
+            const p = parseInt(pcs[i].value) || 1;
+
+            if (l > 0 && b > 0 && h > 0) {
+                const totalVolumeCM = l * b * h * p;
+                // Volumetric Weight (Total Volume / Factor)
+                totalVolWt += totalVolumeCM / volWtFactor;
+                // CFT (Total Volume / CC per CF)
+                totalCFT += totalVolumeCM / cftFactor; 
+            }
+        }
+        
+        document.getElementById('volWt').value = totalVolWt.toFixed(2);
+        cftCalculatedField.value = totalCFT.toFixed(2);
+        
+        modal.style.display = "none";
+        calculateChargedWeight();
+        
+        alert(`Volumetric Weight (${volWtFactor} Factor): ${totalVolWt.toFixed(2)} Kg. Calculated CFT: ${totalCFT.toFixed(2)}.`);
+    }
+
+    // Charged Weight calculation
+    function calculateChargedWeight() {
+        const actualWt = parseFloat(document.getElementById('actualWeight').value) || 0;
+        const volWt = parseFloat(document.getElementById('volWt').value) || 0;
+        const chargedWt = Math.max(actualWt, volWt);
+        document.getElementById('chargedWeight').value = chargedWt.toFixed(2);
+    }
+    
+    document.addEventListener('DOMContentLoaded', calculateChargedWeight);
+
+
+    // --- MIS REPORT LOGIC (doGet) ---
+    // This URL must match your Apps Script Web App Deployment URL
+    const REPORT_FETCH_URL = 'https://script.google.com/macros/s/AKfycbzaOPfV0Hn8yU6uHdIpwpRJgGOHDy35p8lW-_xTTm1MClPDCuja1W-yN9izSVEH3hti/exec'; 
+
+    document.getElementById('fetchReportData').addEventListener('click', fetchReportData);
+
+    // Define all available columns and their corresponding Google Sheet Index (0-based)
+    // IMPORTANT: Check these indices against your Google Sheet columns
+    const ALL_COLUMNS = [
+        { name: "Date", index: 0, defaultShow: true },
+        { name: "Awb No.", index: 1, defaultShow: true },
+        { name: "Booking Mode", index: 2, defaultShow: false },
+        { name: "Liability", index: 3, defaultShow: false },
+        { name: "Vendor", index: 4, defaultShow: true },
+        { name: "Vendor Awb No.", index: 5, defaultShow: false },
+        { name: "Consignor", index: 6, defaultShow: true },
+        { name: "Consignee", index: 7, defaultShow: true }, // Set to true based on user request
+        { name: "Origin", index: 8, defaultShow: false },
+        { name: "Destination", index: 9, defaultShow: true },
+        { name: "Pincode", index: 10, defaultShow: false },
+        { name: "Contact No. 1", index: 11, defaultShow: false },
+        { name: "Invoice No.", index: 13, defaultShow: false },
+        { name: "Invoice Value", index: 14, defaultShow: true },
+        { name: "Ewaybill No.", index: 15, defaultShow: false },
+        { name: "Qty", index: 16, defaultShow: true },
+        { name: "CFT", index: 17, defaultShow: false },
+        { name: "Actual Wt (Kg)", index: 18, defaultShow: false },
+        { name: "Vol Wt (Kg)", index: 19, defaultShow: false },
+        { name: "Chg. Wt (Kg)", index: 20, defaultShow: true },
+        { name: "ODA", index: 21, defaultShow: false },
+        { name: "Vehicle No.", index: 25, defaultShow: false },
+        { name: "Remark", index: 24, defaultShow: true },
+        // Action is not a data column, handled separately
+    ];
+    
+    // Initialize selected columns based on defaultShow=true
+    let selectedColumns = ALL_COLUMNS.filter(col => col.defaultShow).map(col => col.name);
+    let cachedReportData = []; // To store fetched data locally for quick column changes
+
+    // --- Column Selector Modal Logic ---
+    const selectorModal = document.getElementById('columnSelectorModal');
+    const openSelectorBtn = document.getElementById('openColumnSelector');
+    const closeSelectorBtn = document.getElementById('closeColumnSelector');
+    const applySelectionBtn = document.getElementById('applyColumnSelection');
+    const columnCheckboxes = document.getElementById('columnCheckboxes');
+
+    // 1. Initialize Checkboxes when opening the modal
+    openSelectorBtn.onclick = function() {
+        // Generate checkboxes only once
+        if (columnCheckboxes.children.length === 0) {
+            ALL_COLUMNS.forEach(col => {
+                const isChecked = selectedColumns.includes(col.name);
+                columnCheckboxes.innerHTML += `
+                    <label style="font-weight: normal; margin-bottom: 0;">
+                        <input type="checkbox" data-col-name="${col.name}" ${isChecked ? 'checked' : ''}> 
+                        ${col.name}
+                    </label>
+                `;
+            });
+        } else {
+             // Reset checkboxes based on current selection before opening
+             columnCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(input => {
+                const colName = input.getAttribute('data-col-name');
+                input.checked = selectedColumns.includes(colName);
+             });
+        }
+        selectorModal.style.display = "block";
+    }
+
+    closeSelectorBtn.onclick = function() { selectorModal.style.display = "none"; }
+
+    // 2. Apply Column Selection
+    applySelectionBtn.onclick = function() {
+        selectedColumns = [];
+        columnCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(input => {
+            if (input.checked) {
+                selectedColumns.push(input.getAttribute('data-col-name'));
+            }
+        });
+        selectorModal.style.display = "none";
+        // Re-render the table with the new columns using cached data
+        renderTable(cachedReportData); 
+    }
+
+    // --- Data Fetching Logic (Sends filters to Apps Script) ---
+    function fetchReportData() {
+        const tableBody = document.getElementById('misReportTableBody');
+        tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">Loading data... please wait.</td></tr>';
+        
+        // Get filters
+        const dateFrom = document.getElementById('reportDateFrom').value;
+        const dateTo = document.getElementById('reportDateTo').value;
+        const searchTerm = document.getElementById('reportSearchAwb').value;
+        const vendorTerm = document.getElementById('reportVendor').value;
+        const consigneeTerm = document.getElementById('reportConsignee').value;
+        
+        // Construct the query parameters including new filters
+        const params = new URLSearchParams({
+            mode: 'getReport',
+            dateFrom: dateFrom,
+            dateTo: dateTo,
+            search: searchTerm,
+            vendor: vendorTerm,      // New Filter
+            consignee: consigneeTerm  // New Filter
+        });
+        
+        const fetchUrl = `${REPORT_FETCH_URL}?${params.toString()}`;
+
+        fetch(fetchUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                cachedReportData = data.records; // Cache the full dataset
+                renderTable(data.records);
+            } else {
+                tableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: red;">Error fetching data: ${data.message}</td></tr>`;
+                console.error('Error in fetching report:', data.message);
+            }
+        })
+        .catch(error => {
+            tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: red;">Network Error. Check console (F12).</td></tr>';
+            console.error('Fetch error:', error);
+        });
+    }
+
+    // --- Table Rendering Logic (Renders only selected columns) ---
+    function renderTable(records) {
+        const tableHead = document.getElementById('misReportTableHeaders');
+        const tableBody = document.getElementById('misReportTableBody');
+        tableHead.innerHTML = '';
+        tableBody.innerHTML = ''; 
+
+        if (records.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">No records found matching the criteria.</td></tr>';
+            return;
+        }
+        
+        // 1. Determine which columns to display and their sheet index
+        const displayColumns = ALL_COLUMNS
+            .filter(col => selectedColumns.includes(col.name));
+            
+        // 2. Build Table Headers (THead)
+        displayColumns.forEach(col => {
+            const th = document.createElement('th');
+            th.textContent = col.name;
+            tableHead.appendChild(th);
+        });
+        // Add the mandatory Action column
+        tableHead.innerHTML += '<th>Action</th>';
+
+
+        // 3. Build Table Body (TBody)
+        records.forEach(record => {
+            const row = tableBody.insertRow();
+            
+            displayColumns.forEach(col => {
+                const cell = row.insertCell();
+                const value = record[col.index];
+                
+                // Format specific column types (Date, Weight, Currency, Remark truncation)
+                if (col.name === "Date" && value) {
+                    cell.textContent = new Date(value).toLocaleDateString();
+                } else if (["Chg. Wt (Kg)", "Invoice Value", "Actual Wt (Kg)", "Vol Wt (Kg)", "CFT"].includes(col.name)) {
+                    cell.textContent = (parseFloat(value) || 0).toFixed(2);
+                } else if (col.name === "Remark" && value) {
+                    cell.textContent = value.substring(0, 25) + (value.length > 25 ? '...' : '');
+                } 
+                else {
+                    cell.textContent = value || '-';
+                }
+            });
+            
+            // Add Action Cell
+            const actionCell = row.insertCell();
+            actionCell.innerHTML = `<button class="btn btn-view" title="Awb No.: ${record[1]}">View Details</button>`;
+        });
+    }
+
+</script>
+
+</body>
+</html>
