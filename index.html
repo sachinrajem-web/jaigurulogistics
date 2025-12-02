@@ -111,7 +111,7 @@
     </style>
 </head>
 <body oncontextmenu="return false;"> <div class="sidebar">
-    <h3>🚢 Maooli Logistics</h3>
+    <h3>🚢 Jay Guru Logistics</h3>
     <ul>
         <li><a href="#awb-booking" class="active" onclick="showSection('awb-booking', this)">📦 Awb Booking</a></li>
         <li><a href="#awb-update" onclick="showSection('awb-update', this)">🔄 Awb Update</a></li>
@@ -123,7 +123,7 @@
 
     <div id="awb-booking" class="content-section active">
         <div class="container">
-            <h2>🚚 Material Booking Form</h2>
+            <h2>🚚 Shipment Booking Details</h2>
             <form id="bookingForm" action="https://script.google.com/macros/s/AKfycbzaOPfV0Hn8yU6uHdIpwpRJgGOHDy35p8lW-_xTTm1MClPDCuja1W-yN9izSVEH3hti/exec" method="POST">
                 <input type="hidden" name="mode" value="new">
                 <div class="form-grid">
@@ -173,11 +173,11 @@
                     </div>
                     <div class="form-group"><label for="oda">ODA (Out of Delivery Area)</label><select id="oda" name="oda"><option value="No">No</option><option value="Yes">Yes</option></select></div>
                     <div class="form-group"><label for="extraCharges">Extra charges (if any)</label><input type="number" id="extraCharges" name="extraCharges" step="0.01" min="0" value="0.00" placeholder="0.00"></div>
-                    <div class="form-group"><label for="shippingMode">Shipping Mode</label><select id="shippingMode" name="shippingMode"><option value="Road">Road</option><option value="Air">Air</option><option value="Rail">Rail</option><option value="Sea">Sea</option></select></div>
+                    <div class="form-group"><label for="shippingMode">Shipping Mode</label><select id="shippingMode" name="shippingMode"><option value="Paid">Paid</option><option value="Topay">Topay</option><option value="Tbb">TBB</option></select></div>
 
                     <div class="form-group"><label for="vehicleNo">Vehicle No.</label><input type="text" id="vehicleNo" name="vehicleNo" placeholder="Vehicle Registration Number"></div>
                     <div class="form-group"><label for="driverNo">Driver No.</label><input type="tel" id="driverNo" name="driverNo" placeholder="Driver Contact Number"></div>
-                    <div class="form-group two-column-span"><label for="uploadInvoice">Invoice File</label><input type="text" id="uploadInvoice" name="uploadInvoice" placeholder="Enter invoice filename/path if uploaded elsewhere"></div>
+                    <div class="form-group two-column-span"><label for="Contain">Contain</label><input type="text" id="contain" name="contain" placeholder="Enter Contain of shipment"></div>
 
                     <div class="form-group full-width"><label for="remark">Remark</label><textarea id="remark" name="remark" rows="3" placeholder="Any specific instructions or notes..."></textarea></div>
 
@@ -186,6 +186,7 @@
                 <div class="action-buttons">
                     <button type="reset" class="btn btn-secondary">Clear Form</button>
                     <button type="submit" class="btn btn-primary">Submit Booking</button>
+                    
                 </div>
             </form>
         </div>
@@ -255,11 +256,11 @@
                     </div>
                     <div class="form-group"><label for="update_oda">ODA (Out of Delivery Area)</label><select id="update_oda" name="oda"><option value="No">No</option><option value="Yes">Yes</option></select></div>
                     <div class="form-group"><label for="update_extraCharges">Extra charges (if any)</label><input type="number" id="update_extraCharges" name="extraCharges" step="0.01" min="0" value="0.00" placeholder="0.00"></div>
-                    <div class="form-group"><label for="update_shippingMode">Shipping Mode</label><select id="update_shippingMode" name="shippingMode"><option value="Road">Road</option><option value="Air">Air</option><option value="Rail">Rail</option><option value="Sea">Sea</option></select></div>
+                    <div class="form-group"><label for="update_shippingMode">Shipping Mode</label><select id="update_shippingMode" name="shippingMode"><option value="Paid">Paid</option><option value="Topay">Topay</option><option value="Tbb">TBB</option></select></div>
 
                     <div class="form-group"><label for="update_vehicleNo">Vehicle No.</label><input type="text" id="update_vehicleNo" name="vehicleNo" placeholder="Vehicle Registration Number"></div>
                     <div class="form-group"><label for="update_driverNo">Driver No.</label><input type="tel" id="update_driverNo" name="driverNo" placeholder="Driver Contact Number"></div>
-                    <div class="form-group two-column-span"><label for="update_uploadInvoice">Invoice File</label><input type="text" id="update_uploadInvoice" name="uploadInvoice" placeholder="Enter invoice filename/path if uploaded elsewhere"></div>
+                    <div class="form-group two-column-span"><label for="update_contain">Contain</label><input type="text" id="update_Contain" name="Contain" placeholder="Enter Content of shipment"></div>
 
                     <div class="form-group full-width"><label for="update_remark">Remark</label><textarea id="update_remark" name="remark" rows="3" placeholder="Any specific instructions or notes..."></textarea></div>
 
@@ -413,10 +414,10 @@
         { name: "ODA", index: 21, defaultShow: false },
         { name: "Extra Charges", index: 22, defaultShow: false },
         { name: "Shipping Mode", index: 23, defaultShow: false },
-        { name: "Remark", index: 24, defaultShow: true },
-        { name: "Vehicle No.", index: 25, defaultShow: false },
-        { name: "Driver No.", index: 26, defaultShow: false },
-        { name: "Invoice File Link", index: 27, defaultShow: false },
+        { name: "Vehicle No.", index: 24, defaultShow: true },
+        { name: "Driver No.", index: 25, defaultShow: false },
+        { name: "Contain", index: 26, defaultShow: false },
+        { name: "Remark", index: 27, defaultShow: false },
         { name: "Timestamp", index: 28, defaultShow: false }
     ];
 
@@ -651,10 +652,10 @@
             { id: 'update_oda', index: 21, type: 'select' },
             { id: 'update_extraCharges', index: 22, type: 'number' },
             { id: 'update_shippingMode', index: 23, type: 'select' },
-            { id: 'update_remark', index: 24, type: 'text' },
-            { id: 'update_vehicleNo', index: 25, type: 'text' },
-            { id: 'update_driverNo', index: 26, type: 'text' },
-            { id: 'update_uploadInvoice', index: 27, type: 'text' }
+            { id: 'update_vehicleNo', index: 24, type: 'text' },
+            { id: 'update_driverNo', index: 25, type: 'text' },
+            { id: 'update_Contain', index: 26, type: 'text' },
+            { id: 'update_remark', index: 27, type: 'text' }
         ];
 
         document.getElementById('rowIndexToUpdate').value = rowIndex; 
